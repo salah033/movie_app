@@ -57,13 +57,6 @@ if 'selected_movien' in st.session_state:
                 trailer_url = f"https://www.youtube.com/watch?v={video['key']}"
                 st.video(trailer_url)
                 
-                
-                
-            #elif not data['results']: 
-                #print ("OKBB")
-                #original_title = '<p style="font-family:Helvetica; color:Yellow; font-size: 60px;">Trailer</p>'
-                #st.markdown(original_title, unsafe_allow_html=True)
-                #st.info("No trailer found.")
     else : 
         st.warning("Connection Error")
 
