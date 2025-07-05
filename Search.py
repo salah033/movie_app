@@ -140,7 +140,7 @@ def display_movies():
                             st.markdown('</div>', unsafe_allow_html=True)
 
         # Recommended section
-        st.markdown('<div class="rec-title">📽️ Recommended Movies</div>', unsafe_allow_html=True)
+        st.markdown('<div class="rec-title">📽️ Similar Movies</div>', unsafe_allow_html=True)
         recommended_movies(movie_df)
 
 #Funtction Recommended_movies: 
