@@ -8,7 +8,6 @@ import ast
 
 st.title("📊 Movie Analytics Dashboard")
 
-# Load data from DB
 @st.cache_data(ttl=86400)
 def load_movies() :
 
@@ -19,7 +18,6 @@ def load_movies() :
         conn.close()
     return df
 
-#def extract_genres(gstr) (NO NEED BECAUSE DATA ALREADY NO NEED TO CONVERT):
     try:
         genres = ast.literal_eval(gstr)
         return [g['name'] for g in genres if 'name' in g]
@@ -27,7 +25,6 @@ def load_movies() :
         return []
     
 
-# Convert genre string to list
 df = load_movies()
 df = df.dropna()
 
@@ -104,7 +101,7 @@ with cols[0] :
     for lang, count in lang_dict.items():
         st.markdown(f"**{lang.upper()}:** {count}")
 
-explode = [0.05] * len(val)  # Slightly separate all slices
+explode = [0.05] * len(val)  
 fig, ax = plt.subplots()
 wedges, texts, autotexts = ax.pie(val, autopct='%1.1f%%', startangle=90, explode=explode)
 ax.axis('equal')
