@@ -5,11 +5,6 @@ import streamlit as st
 from utils import fetch_poster, detail_id_movie
 from streamlit_extras.switch_page_button import switch_page
 
-
-#Load File 
-#conn = sqlite3.connect("/home/salah/Documents/Python lessons/movie/my_prg/movies.db")
-#df = pd.read_sql("SELECT * FROM movies", conn)
-#conn.close()
 @st.cache_data(ttl=86400)
 def get_movie_by_title(title):
     conn = sqlite3.connect("movies.db")
@@ -17,10 +12,8 @@ def get_movie_by_title(title):
     conn.close()
     return df
 
-#Display found movies
 def display_movies():
 
-    # 🔁 Initialize session state
     if "search_results" not in st.session_state:
         st.session_state.search_results = None
     if "movie_input" not in st.session_state:
@@ -28,10 +21,8 @@ def display_movies():
 
     st.title("🎬 Movies Application 🎬")
 
-    # 🧠 Use session_state to preserve user input
     movie_input = st.text_input("Type a Movie Name Here..", value=st.session_state.movie_input)
 
-    # 🔍 When Search is clicked
     if st.button("Search", key="searchbutton"):
         st.session_state.movie_input = movie_input.strip().lower()
         movie_df = get_movie_by_title(st.session_state.movie_input)
@@ -41,7 +32,6 @@ def display_movies():
         else:
             st.session_state.search_results = movie_df
 
-    # 🔁 Show results if available
     if isinstance(st.session_state.search_results, str) and st.session_state.search_results == "not_found":
         st.error(f"❌ Movie '{st.session_state.movie_input}' not found.")
     elif isinstance(st.session_state.search_results, pd.DataFrame):
@@ -53,7 +43,6 @@ def display_movies():
         movies_id = list(movie_df['id'])
         movies_data = [[x, y, z] for x, y, z in zip(movie_name, movie_poster, movies_id)]
 
-        # Fill empty slots for layout
         if len(movies_data) < 5:
             movies_data += [False] * (5 - len(movies_data))
 
@@ -74,9 +63,8 @@ def display_movies():
                             detail_id_movie (movie_id)
                             st.switch_page("Details.py")  # or "pages/Details.py" if needed
 
-        # Optional: Recommended section placeholder
         st.title("📽️ Recommended Movies")
-        recommended_movies(movie_df)  # Uncomment if you have this
+        recommended_movies(movie_df) 
 
 #Funtction Recommended_movies: 
 def recommended_movies(movies_df) : 
@@ -117,16 +105,6 @@ def recommended_movies(movies_df) :
     
     new_df = new_df.loc[rows_to_keep].reset_index(drop=True)
     
-    #new_df.duplicated(subset='id', keep='first')
-    
-    #dup_ids = new_df['id'].value_counts()
-    #dup_ids = dup_ids[dup_ids > 1]
-
-    #print(f"🔁 Number of unique duplicated IDs: {len(dup_ids)}")
-    #print("👉 Duplicated IDs:")
-    #print(dup_ids)
-
-
     cv = CountVectorizer(max_features=1000, stop_words='english')
     vectors = cv.fit_transform(new_df['tags']).toarray()
     similarity = cosine_similarity(vectors)
@@ -175,8 +153,6 @@ def recommended_movies(movies_df) :
                         st.rerun()
 
 #Main_Program : 
-
-#if st.button("Search", key = "searchbutton") : 
 display_movies()
 
 
