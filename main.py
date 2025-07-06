@@ -1,6 +1,4 @@
 import streamlit as st  
-import pandas as pd
-import sqlite3
 from utils import reload_csv_to_sqlite
 from streamlit_extras.switch_page_button import switch_page
 
@@ -17,7 +15,8 @@ def wide_space_default():
 pg = st.navigation([st.Page("Search.py"), 
                     st.Page("All_Movies.py"), 
                     st.Page("Details.py"),
-                    st.Page("Dashboard.py")
+                    st.Page("Dashboard.py"),
+                    st.Page("Favourite.py")
                     ])
 wide_space_default()
 pg.run()
