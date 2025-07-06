@@ -12,8 +12,8 @@ def wide_space_default():
     st.set_page_config(layout="wide")
 
 # Import the navigation module
-pg = st.navigation([st.Page("Search.py"), 
-                    st.Page("All_Movies.py"), 
+pg = st.navigation([st.Page("All_Movies.py"), 
+                    st.Page("Search.py"), 
                     st.Page("Details.py"),
                     st.Page("Dashboard.py"),
                     st.Page("Favourite.py")
