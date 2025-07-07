@@ -2,9 +2,7 @@
 import pandas as pd 
 import sqlite3
 import streamlit as st
-from utils import fetch_poster, detail_id_movie
-from streamlit_extras.switch_page_button import switch_page
-
+from utils import fetch_poster, check_favorite_movie, add_favorite_movie, add_visited_movie, get_last_visited
 
 #Load File 
 #conn = sqlite3.connect("/home/salah/Documents/Python lessons/movie/my_prg/movies.db")
@@ -98,22 +96,40 @@ def display_movies():
         movie_df = st.session_state.search_results
 
         st.markdown('<div class="rec-title">🔎 Search Results</div>', unsafe_allow_html=True)
-        movie_name = list(movie_df['title'])
-        movie_poster = list(movie_df['poster_path'])
+        movie_names = list(movie_df['title'])
+        poster_paths = list(movie_df['poster_path'])
         movies_id = list(movie_df['id'])
-        movies_data = [[x, y, z] for x, y, z in zip(movie_name, movie_poster, movies_id)]
+        movies_director = list(movie_df['director'])
+        movies_cast = list(movie_df['cast'])    
+        movies_release_date = list(movie_df['release_date'])
+        movies_genres = list(movie_df['genres'])    
+        movies_tagline = list(movie_df['tagline'])    
+        movies_writers = list(movie_df['writers'])
+        movies_overview = list(movie_df['overview'])    
+
+        #movies_data = [[x, y, z] for x, y, z in zip(movie_name, movie_poster, movies_id)]
 
         # Fill empty slots for layout
-        if len(movies_data) < 5:
-            movies_data += [False] * (5 - len(movies_data))
+        if len(movie_names) < 5:
+            movie_names += [False] * (5 - len(movie_names))
 
-        for i in range(0, len(movies_data), 5):
+        for i in range(0, len(movie_names), 5):
             cols = st.columns(5)
             for j in range(5):
-                if (i + j < len(movies_data)) and (movies_data[i + j] is not False):
-                    title = movies_data[i + j][0]
-                    poster_url = fetch_poster(movies_data[i + j][1])
-                    movie_id = movies_data[i + j][2]
+                if (i + j < len(movie_names)) and (movie_names[i + j] is not False):
+                    try :
+                        title = movie_names[i + j]
+                        poster_url = fetch_poster(poster_paths[i + j])
+                        movie_id = movies_id[i + j]
+                        movie_director = movies_director[i + j]
+                        movie_cast = movies_cast[i + j]
+                        movie_release_date = movies_release_date[i + j]
+                        movie_genres = movies_genres[i + j]
+                        movie_tagline = movies_tagline[i + j]
+                        movie_writers = movies_writers[i + j]
+                        movie_overview = movies_overview[i + j]
+                    except TypeError as e:
+                        print (f"Error processing movie data: {e}")
 
                     with cols[j]:
                         with st.container():
@@ -124,19 +140,36 @@ def display_movies():
                             details_btn = st.button("Show Details", key=f"detail_btn_{movie_id}", use_container_width=True)
                             fav_btn = st.button("♥️ Add to Favorites", key=f"fav_btn_{movie_id}", use_container_width=True)
 
+                            movie_data = {
+                                    'id': movie_id,
+                                    'title': title,
+                                    'poster_path': poster_url,
+                                    'overview': movie_overview,
+                                    'director': movie_director,
+                                    'cast': movie_cast,
+                                    'release_date': movie_release_date,
+                                    'genres': movie_genres,
+                                    'tagline': movie_tagline,
+                                    'writers': movie_writers
+                                }
+
                             if details_btn:
-                                st.session_state.selected_movien = movie_id
-                                detail_id_movie(movie_id)
+
+                                #st.session_state.selected_movien = movie_id
+                                add_visited_movie(movie_data)
+                                get_last_visited(movie_data)
                                 st.switch_page("Details.py")
+                                st.rerun()
 
                             if fav_btn:
-                                if 'favorites' not in st.session_state:
-                                    st.session_state.favorites = []
-                                if movie_id not in st.session_state.favorites:
-                                    st.session_state.favorites.append(movie_id)
+                                
+                                if check_favorite_movie(movie_data) : 
+                                    add_favorite_movie(movie_data)
+                                    print ("ADDED TO FAVORITES")
                                     st.success(f"{title} added to favorites!")
                                 else:
                                     st.warning(f"{title} is already in your favorites.")
+                                    print("MOVIE ALDREADY IN FAVORITES")
                             st.markdown('</div>', unsafe_allow_html=True)
 
         # Recommended section
@@ -161,6 +194,7 @@ def recommended_movies(movies_df) :
     movies['cast'] = movies['cast'].fillna('NoData')
     movies['director'] = movies['director'].fillna('NoData')
     movies['writers'] = movies['writers'].fillna('NoData')
+    movies['release_date'] = movies['release_date'].fillna('NoData')
 
     movies['tags'] = movies['overview'] + " " + movies['tagline'] + " " + movies['genres'] + " " + movies['cast'] + " " + movies['director'] + " " + movies['writers']
 
@@ -214,9 +248,19 @@ def recommended_movies(movies_df) :
         cols = st.columns(5)
         for j in range(5):
             if i + j < len(clean_list):
-                title = new_df.iloc[clean_list[i+j][0]].title
-                poster_url = fetch_poster(new_df.iloc[clean_list[i+j][0]].poster_path)
-                movie_index_id = int(new_df.iloc[clean_list[i+j][0]].id)
+                try : 
+                    title = new_df.iloc[clean_list[i+j][0]].title
+                    poster_url = fetch_poster(new_df.iloc[clean_list[i+j][0]].poster_path)
+                    movie_index_id = int(new_df.iloc[clean_list[i+j][0]].id)
+                    movie_overview = (movies.iloc[clean_list[i+j][0]].overview)
+                    movie_director = movies.iloc[clean_list[i+j][0]].director
+                    movie_cast = movies.iloc[clean_list[i+j][0]].cast
+                    movie_release_date = movies.iloc[clean_list[i+j][0]].release_date
+                    movie_genres = movies.iloc[clean_list[i+j][0]].genres
+                    movie_tagline = movies.iloc[clean_list[i+j][0]].tagline
+                    movie_writers = movies.iloc[clean_list[i+j][0]].writers
+                except TypeError as e:
+                        print (f"Error processing movie data: {e}")
 
                 with cols[j]:
                     with st.container():
@@ -227,20 +271,35 @@ def recommended_movies(movies_df) :
                         details_btn = st.button("Show Details", key=f"detail_btn_{movie_index_id}_rec", use_container_width=True)
                         fav_btn = st.button("♥️ Add to Favorites", key=f"fav_btn_{movie_index_id}_rec", use_container_width=True)
 
+                        movie_data = {
+                                    'id': movie_index_id,
+                                    'title': title,
+                                    'poster_path': poster_url,
+                                    'overview': movie_overview,
+                                    'director': movie_director,
+                                    'cast': movie_cast,
+                                    'release_date': movie_release_date,
+                                    'genres': movie_genres,
+                                    'tagline': movie_tagline,
+                                    'writers': movie_writers
+                                }
+
                         if details_btn:
-                            st.session_state.selected_movien = movie_index_id
-                            detail_id_movie(movie_index_id)
+                            
+                            add_visited_movie(movie_data)
+                            get_last_visited(movie_data)
                             st.switch_page("Details.py")
                             st.rerun()
 
                         if fav_btn:
-                            if 'favorites' not in st.session_state:
-                                st.session_state.favorites = []
-                            if movie_index_id not in st.session_state.favorites:
-                                st.session_state.favorites.append(movie_index_id)
+                            
+                            if check_favorite_movie(movie_data) : 
+                                add_favorite_movie(movie_data)
+                                print ("ADDED TO FAVORITES")
                                 st.success(f"{title} added to favorites!")
                             else:
                                 st.warning(f"{title} is already in your favorites.")
+                                print("MOVIE ALDREADY IN FAVORITES")
                         st.markdown('</div>', unsafe_allow_html=True)
 
 #Main_Program : 
