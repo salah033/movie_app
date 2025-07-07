@@ -1,7 +1,15 @@
 import streamlit as st
 from utils import fetch_poster
 import requests
-import time
+
+try : 
+    from utils import last_movie
+except ImportError as e:
+    last_movie = False   
+    print("last_movie not found, initializing to False. Error:", e)
+    
+TMDB_API_KEY = st.secrets["api"]["TMDB_API_KEY"]
+
 
 st.markdown(
     """
@@ -37,44 +45,47 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-TMDB_API_KEY = st.secrets["api"]["TMDB_API_KEY"]
+#function to show details on details page
+def show_details():
+    
+    if last_movie :
+        movie_det = last_movie
+        
+        st.markdown(f'<div class="details-title">{movie_det['title']}</div>', unsafe_allow_html=True)
+        cols = st.columns(3)
 
-if 'selected_movien' in st.session_state:
-    from utils import sel_movi_dt
+        with cols[0]:
+            st.image(fetch_poster(movie_det['poster_path']), width=300)
 
-    st.markdown(f'<div class="details-title">{sel_movi_dt["title"][0]}</div>', unsafe_allow_html=True)
-    cols = st.columns(3)
+        with cols[1]:
+            st.markdown('<div class="details-title details-label">Staff</div>', unsafe_allow_html=True)
+            st.markdown(f"🎬 <span class='details-label'>Director:</span> {movie_det['director']}", unsafe_allow_html=True)
+            st.markdown(f"🧑‍� <span class='details-label'>Cast:</span> {movie_det['cast']}", unsafe_allow_html=True)
 
-    with cols[0]:
-        st.image(fetch_poster(sel_movi_dt['poster_path'][0]), width=300)
+        with cols[2]:
+            st.markdown('<div class="details-title details-label">Details</div>', unsafe_allow_html=True)
+            st.markdown(f"� <span class='details-label'>Release Date:</span> {movie_det['release_date']}", unsafe_allow_html=True)
+            st.markdown(f"🎭 <span class='details-label'>Genres:</span> {movie_det['genres']}", unsafe_allow_html=True)
+            st.markdown('<div class="details-title details-label">Overview</div>', unsafe_allow_html=True)
+            st.markdown(f"📝 <span class='details-label'>Overview:</span> {movie_det['overview']}", unsafe_allow_html=True)
 
-    with cols[1]:
-        st.markdown('<div class="details-title details-label">Staff</div>', unsafe_allow_html=True)
-        st.markdown(f"🎬 <span class='details-label'>Director:</span> {sel_movi_dt['director'][0]}", unsafe_allow_html=True)
-        st.markdown(f"🧑‍� <span class='details-label'>Cast:</span> {sel_movi_dt['cast'][0]}", unsafe_allow_html=True)
+        url = f"https://api.themoviedb.org/3/movie/{movie_det['id']}/videos?api_key={TMDB_API_KEY}"
+        response = requests.get(url)
 
-    with cols[2]:
-        st.markdown('<div class="details-title details-label">Details</div>', unsafe_allow_html=True)
-        st.markdown(f"� <span class='details-label'>Release Date:</span> {sel_movi_dt['release_date'][0]}", unsafe_allow_html=True)
-        st.markdown(f"🎭 <span class='details-label'>Genres:</span> {sel_movi_dt['genres'][0]}", unsafe_allow_html=True)
-        st.markdown('<div class="details-title details-label">Overview</div>', unsafe_allow_html=True)
-        st.markdown(f"📝 <span class='details-label'>Overview:</span> {sel_movi_dt['overview'][0]}", unsafe_allow_html=True)
-
-    url = f"https://api.themoviedb.org/3/movie/{sel_movi_dt['id'][0]}/videos?api_key={TMDB_API_KEY}"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        st.markdown('<div class="details-title details-label">Trailers</div>', unsafe_allow_html=True)
-        if not (data['results']):
-            st.info("No trailer found.")
+        if response.status_code == 200:
+            data = response.json()
+            st.markdown('<div class="details-title details-label">Trailers</div>', unsafe_allow_html=True)
+            if not (data['results']):
+                st.info("No trailer found.")
+            else:
+                for video in data['results']:
+                    if video['type'] == 'Trailer' and video['site'] == 'YouTube':
+                        trailer_url = f"https://www.youtube.com/watch?v={video['key']}"
+                        st.video(trailer_url)
         else:
-            for video in data['results']:
-                if video['type'] == 'Trailer' and video['site'] == 'YouTube':
-                    trailer_url = f"https://www.youtube.com/watch?v={video['key']}"
-                    st.video(trailer_url)
-    else:
-        st.warning("Connection Error")
+            st.warning("Connection Error")
 
-else:
-    st.warning("No movie selected.")
+    else:
+        st.warning("No movie selected.")
+
+show_details()
